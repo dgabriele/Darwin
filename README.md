@@ -10,9 +10,23 @@ objects as you would in other frameworks. When Python loads a Darwin app,
 its automatically builds the data structures used by URL traversals using
 a special type constructor.
 
+Consider the diagram below. When Darwin receives a request, it resolves
+the URL path to the Date class. When instantiated, all necessary context 
+data, like user session data, database tables, etc., are accumulated as
+defined in the built-in \_\_enter\_\_ method of each inherited super-
+class of the Date class.
+
+Also, notice that request handler methods like GET, PUT, POST, etc. 
+are also inherited. In the example below, suppose that the name of a 
+news section is invalid. Since the Section class inherits the GET
+handler of the News class, the default behavior is to respond with the
+news view. In other words, inherited request handlers can be designed 
+so that the behavior of your application decays gracefully in response 
+to anomolous requests.
+
 ![diagram](https://raw.github.com/basefook/Darwin/master/example.png)
 
-This could be written
+This could be written as follows:
 
 ```python
 
@@ -32,12 +46,12 @@ class News(Home):
   key = 'news'
 
   def GET(self):
-    self.res.body = 'Welcome to the news!'
+    self.res.body = 'Welcome to Science & Technology News!'
 
 
 class Section(News):
 
-  key = r'/(?P<section>[a-z]\w+)/'
+  key = r'/(?P<section>science|technology)/'
 
   def GET(self):
     s = self.matchdict['section']
