@@ -6,11 +6,10 @@ from collections import defaultdict, deque
 import webob
 import webob.exc
 
+RE_REGEnode_clsP = re.compile(r'/(.+)/$')
 
 class NodeType(type):
    
-  RE_REGEXP = re.compile(r'/(.+)/$')
-
   def __new__(type_, name, bases, dict_):
     '''
       Assign to each class a table, partitioned into two groups: (1) string
@@ -21,7 +20,7 @@ class NodeType(type):
     cls = type.__new__(type_, name, bases, dict_)
     cls.adj = defaultdict(dict)
     if hasattr(bases[0], 'key'):
-      m = NodeType.RE_REGEXP.match(cls.key)
+      m = RE_REGEnode_clsP.match(cls.key)
       if m is not None:
         regexp = re.compile(m.groups()[0])
         bases[0].adj['regexps'][regexp] = cls
@@ -36,7 +35,8 @@ class Node(object):
 
   key = '' # doc root
 
-  def __init__(self, req, res):
+  def __init__(self, req, res, matchdict={}):
+    self.matchdict = matchdict
     self.req = req
     self.res = res
 
@@ -54,53 +54,59 @@ class Node(object):
     pass
   
   @classmethod
-  def app(cls, env, start_response):
+  def app(node_cls, env, start_response):
     ''' 
       WSGI main point of entry for URL traversal.
     '''
     res = webob.Response()
-    req = webob.Request(env)
+    path = env['PATH_INFO'].strip('/')
 
-    ''' 
-      p:    request path_info
-      tail: p, after spliting of the head component
-      s0:   the head component of p.
-      X:    the resolved node class to evaluate.
-      X1:   given X, X1 is an adjacent child node to resolve next.
-      Xi:   given X, Xi is an adjancent child node.
-      x:    the evaluated instance of the fully resolved X.
-    '''
-    X = cls
-    p = req.path_info
+    if path == 'favicon.ico': # TODO: static handlers
+      return res(env, start_response)
+
+    req = webob.Request(env)
     matchdict = {}
+
     try:
-      s0, p = p.split('/', 1)
-      if p == 'favicon.ico': # TODO: static handlers
-        return res(env, start_response)
-      while p:
-        t = p.split('/', 1)
-        s0, tail = t if len(t) == 2 else (t[0], '')
-        X1 = X.adj['literals'].get(s0) 
-        if not X1:
-          for regex, Xi in X.adj['regexps'].iteritems(): 
-            m = regex.match(p)
-            if m:
-              matchdict.update(m.groupdict())
-              p = regex.split(p)[-1].lstrip('/')
-              X1 = Xi
+      while path: 
+
+        # 1. Split path into head & tail. EG, a/b/c -> (a, b/c).
+        #
+        splits = path.split('/', 1)
+        head, tail = splits if len(splits) == 2 else (splits[0], '')
+
+        # 2. Match head against adjacent string literals
+        #
+        next_node_cls = node_cls.adj['literals'].get(head) 
+
+        # 3. Match unsegmented path head against adjacent regexps.
+        #
+        if not next_node_cls:
+          for regex, child_node_cls in node_cls.adj['regexps'].iteritems(): 
+            match = regex.match(path)
+            if match:
+              matchdict.update(match.groupdict())
+              path = regex.split(path)[-1].lstrip('/')
+              next_node_cls = child_node_cls
               break
         else:
-          p = tail
-        if not X1:
-          raise webob.exc.HTTPTemporaryRedirect(location='/')
+          path = tail 
+
+        # 4. Make sure a node class was resolved.
+        #
+        if not next_node_cls:
+          raise webob.exc.HTTPNotFound()
         else:
-          X = X1
-      x = X(req, res)
-      x.matchdict = matchdict
-      with x:
-        getattr(x, req.method)()
+          node_cls = next_node_cls
+
+      # 5. Instantiate and call the resolved node.
+      #
+      with node_cls(req, res, matchdict) as node:
+        getattr(node, req.method)()
         return res(env, start_response)
+
     except webob.exc.HTTPException as e:
+      print e
       return req.get_response(e)(env, start_response)
   
     
@@ -109,15 +115,15 @@ class Node(object):
   ## HTTP Method handlers ----------------------------------
 
   def GET(self):
-    raise NotImplementedError('override in subclass')
+    raise webob.exc.HTTPNotFound()
   def PUT(self):
-    raise NotImplementedError('override in subclass')
+    raise webob.exc.HTTPNotFound()
   def POST(self):
-    raise NotImplementedError('override in subclass')
+    raise webob.exc.HTTPNotFound()
   def COPY(self):
-    raise NotImplementedError('override in subclass')
+    raise webob.exc.HTTPNotFound()
   def DELETE(self):
-    raise NotImplementedError('override in subclass')
+    raise webob.exc.HTTPNotFound()
   
 
 
