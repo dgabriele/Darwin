@@ -52,5 +52,4 @@ class Date(Section):
 
 if __name__ == '__main__':
   from paste import httpserver
-  Home.configure('development.ini')
   httpserver.serve(Home.app, 'localhost', 8080)
