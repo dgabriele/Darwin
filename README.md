@@ -1,6 +1,6 @@
 Darwin
 =============
-A phylogenetic traversal-based web framework
+A Phylogenetic Web Framework
 --------------------------------------------
 
 ### Overview ###
