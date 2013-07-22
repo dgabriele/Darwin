@@ -13,8 +13,8 @@ a special type constructor.
 Consider the diagram below. When Darwin receives a request, it resolves
 the URL path to the Date class. When instantiated, all necessary context 
 data, like user session data, database tables, etc., are accumulated as
-defined in the built-in \_\_enter\_\_ method of each inherited super-
-class of the Date class.
+defined in the built-in \_\_enter\_\_ method of each inherited Date 
+superclass.
 
 Also, notice that request handler methods like GET, PUT, POST, etc. 
 are also inherited. In the example below, suppose that the name of a 
