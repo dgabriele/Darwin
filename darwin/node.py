@@ -113,20 +113,20 @@ class Node(object):
   
   @classmethod
   def configure(cls, fpath=None, **settings):
-    cp = ConfigParser(); cp.read(fpath)
-    if cp.has_section('mako'):
-      from darwin.view import renderer
+    ini = ConfigParser()
+    ini.read(fpath)
+    if ini.has_section('mako'):
       from mako.lookup import TemplateLookup
-      if cp.has_option('mako', 'lookup-directories'):
-        lookup_dirs = cp.get('mako', 'lookup-directories').split()
+      if ini.has_option('mako', 'lookup-directories'):
+        lookup_dirs = ini.get('mako', 'lookup-directories').split()
       else:
         lookup_dirs = None
-      if cp.has_option('mako', 'module-directory'):
-        module_dir = cp.get('mako', 'module-directory')
+      if ini.has_option('mako', 'module-directory'):
+        module_dir = ini.get('mako', 'module-directory')
       else:
         module_dir = None
       lookup = TemplateLookup(lookup_dirs, module_dir)
-      renderer.lookup = lookup
+      cls.template_lookup = lookup
 
   
   ## HTTP Method handlers ----------------------------------
