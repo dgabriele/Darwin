@@ -1,17 +1,20 @@
 '''Darwin "blog" app example'''
 
 from datetime import datetime
-import darwin
+
+from darwin.node import Node
+from darwin.view import renderer
 
 
-class Home(darwin.Node):
+class Home(Node):
   
   def __enter__(self):
     self.user = 'guest423' # in reality, authenticate user here.
     return self
-
+  
+  @renderer('home')
   def GET(self):
-    self.res.body = 'Homepage'
+    return {'user': self.user}
 
 
 class News(Home):
@@ -51,4 +54,5 @@ class Date(Section):
 
 if __name__ == '__main__':
   from paste import httpserver
+  Home.configure('development.ini')
   httpserver.serve(Home.app, 'localhost', 8080)

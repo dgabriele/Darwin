@@ -2,14 +2,16 @@
 
 import re
 from collections import defaultdict, deque
+from ConfigParser import ConfigParser
 
 import webob
 import webob.exc
 
-RE_REGEnode_clsP = re.compile(r'/(.+)/$')
 
 class NodeType(type):
    
+  RE_REGEX = re.compile(r'/(.+)/$')
+
   def __new__(type_, name, bases, dict_):
     '''
       Assign to each class a table, partitioned into two groups: (1) string
@@ -20,7 +22,7 @@ class NodeType(type):
     cls = type.__new__(type_, name, bases, dict_)
     cls.adj = defaultdict(dict)
     if hasattr(bases[0], 'key'):
-      m = RE_REGEnode_clsP.match(cls.key)
+      m = NodeType.RE_REGEX.match(cls.key)
       if m is not None:
         regexp = re.compile(m.groups()[0])
         bases[0].adj['regexps'][regexp] = cls
@@ -109,7 +111,22 @@ class Node(object):
       print e
       return req.get_response(e)(env, start_response)
   
-    
+  @classmethod
+  def configure(cls, fpath=None, **settings):
+    cp = ConfigParser(); cp.read(fpath)
+    if cp.has_section('mako'):
+      from darwin.view import renderer
+      from mako.lookup import TemplateLookup
+      if cp.has_option('mako', 'lookup-directories'):
+        lookup_dirs = cp.get('mako', 'lookup-directories').split()
+      else:
+        lookup_dirs = None
+      if cp.has_option('mako', 'module-directory'):
+        module_dir = cp.get('mako', 'module-directory')
+      else:
+        module_dir = None
+      lookup = TemplateLookup(lookup_dirs, module_dir)
+      renderer.lookup = lookup
 
   
   ## HTTP Method handlers ----------------------------------
