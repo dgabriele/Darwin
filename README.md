@@ -20,9 +20,10 @@ class Home(darwin.Node):
   def __enter__(self):
     self.user = 'guest423' # in reality, authenticate the user here.
     return self
-
+  
+  @renderer('home')
   def GET(self):
-    self.res.body = 'Homepage'
+    return {'user': self.user}
 
 
 class News(Home):
