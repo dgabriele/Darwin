@@ -1,13 +1,24 @@
-'''Darwin "blog" app example'''
+Darwin
+=============
+A phylogenetic traversal-based web framework
+--------------------------------------------
 
-from datetime import datetime
-import darwin
+### Overview ###
+In a nutshell, Darwin automatically maps Python inheritance hierarchies 
+to corresponding URL traversals. There is no need to define extra "context" 
+objects as you would in other frameworks. When Python loads a Darwin app, 
+its traversal tables are constructed automatically by a metaclass.
 
+![diagram](https://raw.github.com/basefook/Darwin/master/example.png)
+
+This could be written
+
+```python
 
 class Home(darwin.Node):
   
   def __enter__(self):
-    self.user = 'guest423' # in reality, authenticate user here.
+    self.user = 'guest423' # in reality, authenticate the user here.
     return self
 
   def GET(self):
@@ -47,8 +58,7 @@ class Date(Section):
     )
 
 
-
-
 if __name__ == '__main__':
   from paste import httpserver
   httpserver.serve(Home.app, 'localhost', 8080)
+```
