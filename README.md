@@ -7,7 +7,8 @@ A Phylogenetic Web Framework
 In a nutshell, Darwin automatically maps Python inheritance hierarchies 
 to corresponding URL traversals. There is no need to define extra "context" 
 objects as you would in other frameworks. When Python loads a Darwin app, 
-its automatically sets up a traversal tree.
+its automatically builds the data structures used by URL traversals using
+a special type constructor.
 
 ![diagram](https://raw.github.com/basefook/Darwin/master/example.png)
 
