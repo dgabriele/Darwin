@@ -3,7 +3,6 @@
 from datetime import datetime
 
 from darwin.node import Node
-from darwin.view import renderer
 
 
 class Home(Node):
@@ -12,9 +11,8 @@ class Home(Node):
     self.user = 'guest423' # in reality, authenticate user here.
     return self
   
-  @renderer('home')
   def GET(self):
-    return {'user': self.user}
+    return 'Welcome Home!'
 
 
 class News(Home):
